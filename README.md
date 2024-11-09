@@ -13,7 +13,7 @@ This project is designed to assist in managing and analyzing real estate data. I
 To use this project, clone the repository and install the required dependencies:
 
 ```bash
-git clone https://github.com/gisti/real_estate_project.git
+git clone https://github.com/gpisti/real-estate-analyser.git
 cd real_estate_project
 pip install -r requirements.txt
 ```
