@@ -1,0 +1,7 @@
+streamlit==1.25.0
+beautifulsoup4==4.12.2
+altair==5.1.1
+SQLAlchemy==2.0.21
+PyMySQL==1.1.0
+pandas==2.0.3
+requests==2.31.0
