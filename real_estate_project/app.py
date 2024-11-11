@@ -9,11 +9,17 @@ import altair as alt
 @st.cache_data
 def load_data():
     """
-    Load data from the database with caching.
-    
-    This function retrieves data from the `real_estate_listings` table using
-    the `fetch_data_from_database` function and caches the result to optimize
-    performance for repeated calls.
+    Runs the Streamlit application for the Real Estate Listings Dashboard.
+
+    This function initializes and runs the Streamlit app, providing an interactive dashboard
+    for real estate data. It allows users to refresh the database by scraping new data,
+    filter listings based on various criteria, and view detailed analyses and visualizations
+    including key metrics and interactive charts.
+
+    Notes:
+        - Provides sidebar options for data filtering and database refreshing.
+        - Displays data tables and visualizations using Altair.
+        - Logs progress and errors using internal logging.
     """
     return fetch_data_from_database()
 
@@ -40,34 +46,44 @@ def main():
 
     st.sidebar.header("Options")
 
+    status_text = st.sidebar.empty()
+
     if st.sidebar.button("Refresh Database and Start Scraping"):
         with st.spinner("Refreshing database and scraping data..."):
             try:
+                status_text.text("Scraping data...")
                 data = scrape_real_estate_data()
                 if not data:
                     st.error("No data scraped. Exiting.")
                     logging.error("No data scraped. Exiting.")
+                    status_text.text("Scraping failed.")
                     return
                 logging.info(f"Scraped {len(data)} records.")
 
+                status_text.text("Connecting to database...")
                 connect_root(data)
                 logging.info("Data inserted into the database successfully.")
 
+                status_text.text("Clearing cache and reloading data...")
                 load_data.clear()
                 st.success("Database refreshed and data reloaded successfully.")
                 logging.info("Database refreshed and data reloaded successfully.")
+                status_text.text("Process completed successfully.")
 
             except Exception as e:
                 st.error(f"Error refreshing database: {e}")
                 logging.error(f"Error refreshing database: {e}")
+                status_text.text("Error occurred during process.")
                 return
 
     data_load_state = st.text("Loading data...")
     data = load_data()
-    data_load_state.text("") 
+    data_load_state.text("")
 
     if data is None or data.empty:
-        st.error("No data available to display.")
+        st.info(
+            "The database is empty. Please populate the database by clicking 'Refresh Database and Start Scraping' in the sidebar."
+        )
         logging.error("No data available to display.")
         return
 
