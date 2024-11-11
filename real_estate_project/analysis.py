@@ -21,7 +21,8 @@ def clean_data(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.dropna(subset=["price", "place_size", "rooms"])
 
-    df = df[(df["price"] >= 5_000_000) & (df["price"] <= 1_000_000_000)]
+    lower_limit, upper_limit = df["price"].quantile([0.01, 0.99])
+    df = df[(df["price"] >= lower_limit) & (df["price"] <= upper_limit)]
 
     df = df.reset_index(drop=True)
 
