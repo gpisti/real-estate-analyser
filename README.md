@@ -70,7 +70,7 @@ pip install -r requirements.txt
 1. **Install MySQL**: Download from the [official website](https://dev.mysql.com/downloads/installer/).
 2. **Create a Database**:
 ```bash
-CREATE DATABASE real_estate_data;
+CREATE DATABASE real_estate_database;
 ```
 
 3. **Configure Database Settings**: Update the database connection settings in your code (e.g., in `app.py`):
@@ -79,7 +79,7 @@ DATABASE_CONFIG = {
     'user': 'root', #default
     'password': 'root', #default
     'host': 'localhost',
-    'database': 'real_estate_data',
+    'database': 'real_estate_database',
 }
 ```
 ---
