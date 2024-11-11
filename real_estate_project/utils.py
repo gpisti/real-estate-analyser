@@ -1,5 +1,6 @@
 from decimal import Decimal, InvalidOperation
 import logging
+import re
 
 
 def extract_city_from_location(location: str, cities: list) -> str:
@@ -25,8 +26,7 @@ def parse_decimal(value):
     Returns:
         str: The name of the city found, or "Unknown" if no city is found.
     """
-    value = value.replace(" ", "").replace("Ft", "")
-    value = "".join(filter(lambda x: x.isdigit() or x == ".", value))
+    value = re.sub(r"[^\d.]", "", value.replace("Ft", "").strip())
     try:
         return Decimal(value) if value else None
     except InvalidOperation:
@@ -36,14 +36,16 @@ def parse_decimal(value):
 
 def parse_int(value):
     """
-    Extract digits from the input string and return them as an integer.
+    Parse a numeric value from a string and return it as a Decimal.
+
+    Removes spaces and currency symbols, then filters digits and the decimal point.
+    Returns None if the value cannot be parsed.
 
     Args:
         value (str): The input string to parse.
 
     Returns:
-        int or None: An integer composed of all digits in the input string,
-        or None if no digits are found.
+        Decimal or None: A decimal representation of the value or None if invalid.
     """
-    value = "".join(filter(str.isdigit, value))
-    return int(value) if value else None
+    digits = re.sub(r"\D", "", value)
+    return int(digits) if digits else None
