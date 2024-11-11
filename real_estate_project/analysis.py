@@ -1,177 +1,113 @@
-import pymysql
 import pandas as pd
-from sqlalchemy import create_engine
-from utils import parse_decimal, parse_int
+import matplotlib.pyplot as plt
+import seaborn as sns
 import internal_logging as logging
 
-DB_HOST = "localhost"
-DB_USER = "root"
-DB_PASSWORD = "root"
-DB_NAME = "real_estate_database"
 
-
-def initialize_database():
+def clean_data(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Initialize the database by creating it if it does not exist.
+    Cleans the input DataFrame by converting data types, handling missing values,
+    and resetting the index.
 
-    Connects to the MySQL server using root credentials, checks if the required
-    database exists, and creates it if it does not.
+    Parameters:
+        df (pd.DataFrame): The input DataFrame containing property data.
+
+    Returns:
+        pd.DataFrame: The cleaned DataFrame.
     """
-    connection = None
-    try:
-        connection = pymysql.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASSWORD,
-        )
-        logging.info("Connected to the MySQL server as root user.")
+    numeric_columns = ["price", "place_size", "land_size", "rooms", "floor"]
+    for col in numeric_columns:
+        df[col] = pd.to_numeric(df[col], errors="coerce")
 
-        with connection.cursor() as cursor:
-            create_db_sql = f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}`;"
-            cursor.execute(create_db_sql)
-            logging.info(f"Verified that database `{DB_NAME}` exists.")
+    df = df.dropna(subset=["price", "place_size", "rooms"])
 
-        connection.commit()
-        logging.info("Database initialization completed successfully.")
+    lower_limit, upper_limit = df["price"].quantile([0.01, 0.99])
+    df = df[(df["price"] >= lower_limit) & (df["price"] <= upper_limit)]
 
-    except pymysql.MySQLError as e:
-        logging.error(f"Error during database initialization: {e}")
-        if connection:
-            connection.rollback()
-    finally:
-        if connection:
-            connection.close()
-            logging.info("MySQL server connection closed.")
+    df = df.reset_index(drop=True)
+
+    logging.info("Data cleaning completed.")
+    return df
 
 
-def insert_data_into_database(connection, data):
+def analyze_data(df: pd.DataFrame) -> None:
     """
-    Insert real estate listings into the database after clearing existing data.
+    Performs data analysis on the DataFrame, including statistical summaries and calculations.
 
-    Creates the 'real_estate_listings' table if it doesn't exist, truncates it,
-    processes each record in the provided data by sanitizing and validating fields,
-    and then inserts the records into the database.
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing cleaned property data.
+
+    Returns:
+        None
     """
-    try:
-        with connection.cursor() as cursor:
-            create_table_sql = """
-            CREATE TABLE IF NOT EXISTS real_estate_listings (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                property_location VARCHAR(255) NOT NULL,
-                price DECIMAL(15,2) NOT NULL,
-                type VARCHAR(50) NOT NULL,
-                place_size DECIMAL(15,2) NOT NULL,
-                land_size DECIMAL(15,2),
-                rooms INT,
-                floor VARCHAR(10)
-            );
-            """
-            cursor.execute(create_table_sql)
-            logging.info("Verified that `real_estate_listings` table exists.")
+    type_counts = df["type"].value_counts()
+    logging.info("Property Type Distribution:")
+    print(type_counts)
 
-            cursor.execute("TRUNCATE TABLE real_estate_listings;")
-            logging.info("Cleared existing data from `real_estate_listings` table.")
+    avg_price_city = (
+        df.groupby("property_location")["price"]
+        .mean()
+        .sort_values(ascending=False)
+        .head(10)
+    )
 
-            connection.commit()
+    avg_price_city_formatted = avg_price_city.apply(lambda x: f"{x:,.2f}")
 
-            insert_sql = """
-                INSERT INTO real_estate_listings
-                (property_location, price, type, place_size, land_size, rooms, floor)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """
+    logging.info("Average Price by City:")
+    print(avg_price_city_formatted)
 
-            for record in data:
-                property_location = record.get("property_location")
-                price = parse_decimal(record.get("price"))
-                property_type = record.get("type")
-                place_size = parse_decimal(record.get("place_size"))
-                land_size = parse_decimal(record.get("land_size", ""))
-                rooms = parse_int(record.get("rooms", ""))
-                floor = None if record.get("floor") == "N/A" else record.get("floor")
+    df["price_per_sqm"] = df["price"] / df["place_size"]
+    logging.info("Calculated price per square meter.")
 
-                if any(
-                    value is None
-                    for value in [property_location, price, property_type, place_size]
-                ):
-                    logging.warning(
-                        f"Skipping record due to missing required fields: {record}"
-                    )
-                    continue
+    correlation = df[["price", "place_size", "rooms", "price_per_sqm"]].corr()
 
-                try:
-                    cursor.execute(
-                        insert_sql,
-                        (
-                            property_location,
-                            price,
-                            property_type,
-                            place_size,
-                            land_size,
-                            rooms,
-                            floor,
-                        ),
-                    )
-                except (pymysql.DataError, pymysql.IntegrityError) as e:
-                    logging.error(f"Error when inserting record: {e}")
-                    continue
-                except Exception as e:
-                    logging.error(f"Unexpected error when inserting record: {e}")
-                    continue
-
-            connection.commit()
-            logging.info("Data inserted into the database successfully.")
-
-    except pymysql.MySQLError as e:
-        logging.error(f"Database error: {e}")
-        connection.rollback()
+    logging.info("Correlation Matrix:")
+    print(correlation.round(2))
 
 
-def connect_root(data):
+def visualize_data(df: pd.DataFrame) -> None:
     """
-    Connect to the database as the root user, initialize the database, and insert data.
+    Generates visualizations from the DataFrame, including histograms, bar charts, and heatmaps.
 
-    Establishes a connection to the MySQL server as the root user, ensures that the required
-    database exists, and then proceeds to insert data into the database.
+    Parameters:
+        df (pd.DataFrame): The DataFrame containing cleaned property data.
+
+    Returns:
+        None
     """
-    initialize_database()
-    connection = None
-    try:
-        connection = pymysql.connect(
-            host=DB_HOST,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_NAME,
-        )
-        logging.info("Connected to the database as root user.")
-        insert_data_into_database(connection, data)
-    except pymysql.MySQLError as e:
-        logging.error(f"Error connecting as root user: {e}")
-    finally:
-        if connection:
-            connection.close()
-            logging.info("Database connection closed.")
+    plt.figure(figsize=(10, 6))
 
+    price_upper_limit = df["price"].quantile(0.95)
 
-def fetch_data_from_database():
-    """
-    Fetch data from the `real_estate_listings` table in the database.
+    sns.histplot(df["price"], bins=50, kde=True)
 
-    Establishes a connection to the database as the root user and retrieves all records from
-    the `real_estate_listings` table as a pandas DataFrame.
-    """
-    try:
-        engine = create_engine(
-            f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
-        )
-        logging.info("Connected to the database as root user.")
+    plt.title("Distribution of Property Prices", fontsize=16)
+    plt.xlabel("Price", fontsize=14)
+    plt.ylabel("Number of Properties", fontsize=14)
 
-        query = "SELECT * FROM real_estate_listings;"
+    plt.xlim(0, price_upper_limit)
 
-        with engine.connect() as connection:
-            df = pd.read_sql(query, connection)
-            logging.info(f"Retrieved {len(df)} records from the database.")
-            return df
+    plt.ticklabel_format(style="plain", axis="x")
+    plt.tight_layout()
+    plt.show()
 
-    except Exception as e:
-        logging.error(f"Error fetching data from the database: {e}")
-        return None
+    top_cities = df.groupby("property_location")["price"].mean().nlargest(10)
+
+    top_cities_formatted = top_cities.apply(lambda x: round(x))
+
+    plt.figure(figsize=(12, 8))
+    sns.barplot(x=top_cities_formatted.values, y=top_cities_formatted.index)
+    plt.title("Top 10 Cities by Average Property Price", fontsize=16)
+    plt.xlabel("Average Price", fontsize=14)
+    plt.ylabel("City", fontsize=14)
+    plt.tight_layout()
+    plt.show()
+
+    plt.figure(figsize=(8, 6))
+    corr_matrix = df[["price", "place_size", "rooms", "price_per_sqm"]].corr()
+    sns.heatmap(corr_matrix, annot=True, cmap="coolwarm", fmt=".2f")
+    plt.title("Correlation Heatmap", fontsize=16)
+    plt.tight_layout()
+    plt.show()
+
+    logging.info("Data visualization completed.")
