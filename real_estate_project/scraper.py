@@ -11,14 +11,13 @@ sys.stdout.reconfigure(encoding="utf-8")
 
 def load_cities_from_csv(file_path: str) -> list:
     """
-    Extract digits from the input string and return them as an integer.
+    Load a list of cities from a CSV file.
 
     Args:
-        value (str): The input string to parse.
+        file_path (str): The path to the CSV file containing city names.
 
     Returns:
-        int or None: An integer composed of all digits in the input string,
-        or None if no digits are found.
+        list: A list of city names extracted from the CSV file.
     """
     city_list = []
     try:
@@ -179,7 +178,9 @@ def scrape_real_estate_data() -> list:
         return []
 
     links = generate_links(estate_count)
-    cities = load_cities_from_csv("turabazis.csv")
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, '..\\turabazis.csv')
+    cities = load_cities_from_csv(filename)
 
     all_data = []
     for link in links:
