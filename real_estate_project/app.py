@@ -9,17 +9,11 @@ import altair as alt
 @st.cache_data
 def load_data():
     """
-    Runs the Streamlit application for the Real Estate Listings Dashboard.
-
-    This function initializes and runs the Streamlit app, providing an interactive dashboard
-    for real estate data. It allows users to refresh the database by scraping new data,
-    filter listings based on various criteria, and view detailed analyses and visualizations
-    including key metrics and interactive charts.
-
-    Notes:
-        - Provides sidebar options for data filtering and database refreshing.
-        - Displays data tables and visualizations using Altair.
-        - Logs progress and errors using internal logging.
+    Load data from the database with caching.
+    
+    This function retrieves data from the `real_estate_listings` table using
+    the `fetch_data_from_database` function and caches the result to optimize
+    performance for repeated calls.
     """
     return fetch_data_from_database()
 
