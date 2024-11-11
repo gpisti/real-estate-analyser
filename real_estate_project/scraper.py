@@ -1,3 +1,4 @@
+import os
 import sys
 import csv
 import requests
@@ -21,13 +22,14 @@ def load_cities_from_csv(file_path: str) -> list:
     """
     city_list = []
     try:
-        with open(file_path, "r", encoding="utf8") as file:
+        relative_path = os.path.join(os.path.dirname(__file__), file_path)
+        with open(relative_path, "r", encoding="utf8") as file:
             reader = csv.reader(file)
             header = next(reader, None)
             if header and "city" in header:
                 city_index = header.index("city")
             else:
-                city_index = 0 
+                city_index = 0
 
             for row in reader:
                 if row and row[city_index]:
@@ -177,7 +179,7 @@ def scrape_real_estate_data() -> list:
         return []
 
     links = generate_links(estate_count)
-    cities = load_cities_from_csv("D:\\Prog\\Python\\unnamed\\turabazis.csv")
+    cities = load_cities_from_csv("turabazis.csv")
 
     all_data = []
     for link in links:
