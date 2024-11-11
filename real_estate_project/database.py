@@ -60,8 +60,8 @@ def insert_data_into_database(connection, data):
                 property_location VARCHAR(255) NOT NULL,
                 price DECIMAL(15,2) NOT NULL,
                 type VARCHAR(50) NOT NULL,
-                place_size DECIMAL(10,2) NOT NULL,
-                land_size DECIMAL(10,2),
+                place_size DECIMAL(15,2) NOT NULL,
+                land_size DECIMAL(15,2),
                 rooms INT,
                 floor VARCHAR(10)
             );
