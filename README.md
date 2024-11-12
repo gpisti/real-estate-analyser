@@ -96,7 +96,7 @@ Access the application at the URL provided in the console output, typically `htt
 
 ## Project Structure
 - `app.py`: Main application script.
-- `utils.p`y: Utility functions used across the project.
+- `utils.py`: Utility functions used across the project.
 - `requirements.txt`: Python dependencies.
 - `README.md`: Project documentation.
 
