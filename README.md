@@ -1,6 +1,7 @@
 # Real Estate Data Analysis and Visualization
 
 This project is a comprehensive tool for collecting real estate data from [otthonterkep.hu](https://otthonterkep.hu), storing it in an SQL database, and providing data analysis and visualizations through an interactive **Streamlit** web application. Users can refresh the database at any time, apply filters through the user interface, and explore insights derived from the collected data.
+This tool helps users gain valuable insights about the real estate market by visualizing trends and filtering data to find properties matching their needs.
 
 ## Table of Contents
 
@@ -13,7 +14,6 @@ This project is a comprehensive tool for collecting real estate data from [ottho
   - [utils.py](#utils.py)
 - [Dependencies](#dependencies)
 - [Usage Examples](#usage-examples)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -109,15 +109,19 @@ real_estate_project/
 ├── internal_logging.py
 ├── analysis.py
 ├── requirements.txt
-└── README.md
+├── README.md
+└── images/
+    └── streamlit_ui.png
 ```
 ---
 
 ## Modules and Functions
 ### app.py
 The main entry point of the application containing the Streamlit web app logic.
-
-## Core Components:
+![](./images/UI_Example.png)
+![](./images/Analysis_Example1.png)
+![](./images/Analysis_Example2.png)
+#### Core Components:
 
 - Data Scraping: Functions to scrape data from the source website.
 - Database Operations: Interact with the SQL database using SQLAlchemy and PyMySQL.
