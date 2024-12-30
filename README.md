@@ -201,6 +201,7 @@ Ensure all dependencies are installed. Use the internal versions of these librar
 - `pymysql`
 - `pandas`
 - `requests`
+
 Install using:
 ```bash
 pip install -r requirements.txt
